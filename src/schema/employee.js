@@ -4,8 +4,8 @@ let Schema = mongoose.Schema
 
 // 企业从业人员信息
 let schemaDefine = {
-  company: {type: Schema.Types.ObjectId, ref: 'company'}, // 企业
-  code: {type: String}, // 业务流水号
+  _id: {type: String}, // 业务流水号
+  company: {type: String, ref: 'company'}, // 企业
   identity: {type: String}, // 身份证件类型
   idNumber: {type: String}, // 证件号
   type: {type: String}, // 从业人员类型

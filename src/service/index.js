@@ -8,6 +8,17 @@ import t from '../locale'
 import consts from '../consts'
 import Logger from './logger'
 
+import company from './model/company'
+import chemical from './model/chemical'
+import employee from './model/employee'
+import goods from './model/goods'
+import signAllot from './model/signAllot'
+import signFlow from './model/signFlow'
+import signMark from './model/signMark'
+import storage from './model/storage'
+import track from './model/track'
+import truck from './model/truck'
+
 let ms = MS()
 let Err = _.defaults(error.Err, consts.Err)
 let logger = Logger('main', __filename)
@@ -79,6 +90,17 @@ export default function (opts = {}) {
   let cb = function (db) {
     opts.db = db
     o.sq = jm.sequence({db: db})
+    o.company = company(o, opts)
+    o.chemical = chemical(o, opts)
+    o.employee = employee(o, opts)
+    o.goods = goods(o, opts)
+    o.signAllot = signAllot(o, opts)
+    o.signFlow = signFlow(o, opts)
+    o.signMark = signMark(o, opts)
+    o.storage = storage(o, opts)
+    o.track = track(o, opts)
+    o.truck = truck(o, opts)
+
     o.ready = true
     o.emit('ready')
     logger.info('服务启动')

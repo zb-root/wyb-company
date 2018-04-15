@@ -4,8 +4,8 @@ let Schema = mongoose.Schema
 
 // 企业运输车辆备案信息
 let schemaDefine = {
-  company: {type: Schema.Types.ObjectId, ref: 'company'}, // 企业
-  code: {type: String}, // 业务流水号
+  _id: {type: String}, // 业务流水号
+  company: {type: String, ref: 'company'}, // 企业
   idNumber: {type: String}, // 机动车号牌号码
   color: {type: String}, // 机动车号牌颜色代码
   sign: {type: String}, // 车辆识别代号

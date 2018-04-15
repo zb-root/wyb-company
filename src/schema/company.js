@@ -4,7 +4,7 @@ let Schema = mongoose.Schema
 
 // 企业信息
 let schemaDefine = {
-  code: {type: String, unique: true, sparse: true, index: true}, // 法人和其他组织统一社会信用代码
+  _id: {type: String}, // 法人和其他组织统一社会信用代码
   organCode: {type: String}, // 公安机关机构代码
   name: {type: String}, // 企业名称
   legalName: {type: String}, // 法定代表人

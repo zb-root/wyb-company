@@ -4,8 +4,8 @@ let Schema = mongoose.Schema
 
 // 企业化学品
 let schemaDefine = {
-  company: {type: Schema.Types.ObjectId, ref: 'company'}, // 企业
-  code: {type: String}, // 化学品代码
+  _id: {type: String}, // 化学品代码
+  company: {type: String, ref: 'company'}, // 企业
   name: {type: String}, // 化学品名
   operationModes: [String], // 经营方式(生产, 使用, 销售, 仓储, 运输, 处置)
   companyCode: {type: String}, // 归属单位代码

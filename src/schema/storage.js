@@ -4,8 +4,8 @@ let Schema = mongoose.Schema
 
 // 企业储存场所基本信息
 let schemaDefine = {
-  company: {type: Schema.Types.ObjectId, ref: 'company'}, // 企业
-  code: {type: String}, // 场所编码
+  _id: {type: String}, // 场所编码
+  company: {type: String, ref: 'company'}, // 企业
   building: {type: String}, // 建筑物名称
   district: {type: String}, // 行政区划名称
   address: {type: String}, // 地址名称
