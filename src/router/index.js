@@ -2,6 +2,7 @@ import async from 'async'
 import _ from 'lodash'
 import MS from 'jm-ms-core'
 import help from './help'
+import company from './company'
 
 let ms = new MS()
 
@@ -15,6 +16,7 @@ export default function (opts = {}) {
   this.onReady().then(() => {
     router
       .use(help(service))
+      .use('/infos', company(service))
   })
 
   return router

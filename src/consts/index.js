@@ -94,6 +94,10 @@ export default {
     FA_CREATE_FAIL: {
       err: BaseErrCode + 1,
       msg: 'Create Fail'
+    },
+    FA_PARAMS_FAIL: {
+      err: BaseErrCode + 2,
+      msg: 'Parameter Error $(params)'
     }
   }
 }

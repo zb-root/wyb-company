@@ -18,6 +18,7 @@ import signMark from './model/signMark'
 import storage from './model/storage'
 import track from './model/track'
 import truck from './model/truck'
+import etl from './etl'
 
 let ms = MS()
 let Err = _.defaults(error.Err, consts.Err)
@@ -100,6 +101,8 @@ export default function (opts = {}) {
     o.storage = storage(o, opts)
     o.track = track(o, opts)
     o.truck = truck(o, opts)
+
+    etl(o)
 
     o.ready = true
     o.emit('ready')

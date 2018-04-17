@@ -12,7 +12,7 @@ let schemaDefine = {
   unit: {type: String}, // 化学品计量单位类型
   amount: {type: Number}, // 数值
   registrant: {type: String}, // 登记人
-  regtime: {type: String}, // 登记时间
+  regtime: {type: Date}, // 登记时间
   companyCode: {type: String}, // 归属单位代码
   companyName: {type: String}, // 归属单位名称
   crtime: {type: Date}, // 日期时间
