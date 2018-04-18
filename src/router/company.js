@@ -23,7 +23,19 @@ export default function (service, opts = {}) {
   }
   let defGet = {
     conditions: {},
-    fields: {name: 1, address: 1, telephone: 1, crtime: 1, moditime: 1, operationModes: 1, chemicals: 1, authState: 1, province: 1, city: 1, isCancel: 1},
+    fields: {
+      name: 1,
+      address: 1,
+      telephone: 1,
+      crtime: 1,
+      moditime: 1,
+      operationModes: 1,
+      chemicals: 1,
+      authState: 1,
+      province: 1,
+      city: 1,
+      isCancel: 1
+    },
     populations: null // 没有的话一定要是不传或者null,如果是{}则查不到数据
   }
 
@@ -110,10 +122,11 @@ export default function (service, opts = {}) {
         conditions.crtime['$lte'] = endDate
       }
       if (province) {
-        conditions.province = province
-      }
-      if (city) {
-        conditions.city = city
+        let code = province
+        if (city) {
+          code += city
+        }
+        conditions.organCode = {$regex: '^' + code + '.*?'}
       }
 
       if (search) {

@@ -19,6 +19,11 @@ let schemaDefine = {
   name: {type: String}, // 姓名
   gender: {type: String}, // 性别
   birthday: {type: Date}, // 生日
+  ZGZLX_MC: {type: String}, // 资格证类型_名称
+  ZGZ_ZJHM: {type: String}, // 资格证证件号码
+  ZGZ_YXQJZRQ: {type: Date}, // 资格证有效期截止日期
+  ZGZBF_DWMC: {type: String}, // 资格证颁发单位名称
+  ZGZBF_RQ: {type: Date}, // 资格证颁发日期
   isCancel: {type: Boolean, default: false}, // 是否已注销
   crtime: {type: Date, default: Date.now}, // 登记时间
   moditime: {type: Date} // 更新时间
