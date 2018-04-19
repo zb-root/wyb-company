@@ -126,7 +126,7 @@ export default function (service, opts = {}) {
         if (city) {
           code += city
         }
-        conditions.organCode = {$regex: '^' + code + '.*?'}
+        conditions.companyCode = {$regex: '^' + code + '.*?'}
       }
 
       if (search) {

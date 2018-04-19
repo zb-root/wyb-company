@@ -3,6 +3,7 @@ export default {
     'YWLSH': '_id', // 法人和其他组织统一社会信用代码+省代号
     'FRHQTZZTYSHXYDM': 'code', // 法人和其他组织统一社会信用代码
     'SJZGDW_GAJGJGDM': 'organCode', // 公安机关机构代码
+    'SJGSDWDM': 'companyCode', // 归属单位代码
     'YZBWXHXPSJHJDM': 'linkCode', // 易制爆危险化学品涉及环节代码
     'DWMC': 'name', // 企业名称
     'FDDBR_XM': 'legalName', // 法定代表人

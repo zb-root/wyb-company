@@ -7,6 +7,7 @@ let schemaDefine = {
   _id: {type: String}, // 法人和其他组织统一社会信用代码+省代号
   code: {type: String}, // 法人和其他组织统一社会信用代码
   organCode: {type: String}, // 公安机关机构代码
+  companyCode: {type: String}, // 归属单位代码
   linkCode: {type: String}, // 易制爆危险化学品涉及环节代码
   name: {type: String}, // 企业名称
   legalName: {type: String}, // 法定代表人

@@ -24,6 +24,8 @@ let schemaDefine = {
   ZGZ_YXQJZRQ: {type: Date}, // 资格证有效期截止日期
   ZGZBF_DWMC: {type: String}, // 资格证颁发单位名称
   ZGZBF_RQ: {type: Date}, // 资格证颁发日期
+  companyCode: {type: String}, // 归属单位代码
+  companyName: {type: String}, // 归属单位名称
   isCancel: {type: Boolean, default: false}, // 是否已注销
   crtime: {type: Date, default: Date.now}, // 登记时间
   moditime: {type: Date} // 更新时间

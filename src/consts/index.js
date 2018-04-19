@@ -97,7 +97,7 @@ export default {
     },
     FA_PARAMS_FAIL: {
       err: BaseErrCode + 2,
-      msg: 'Parameter Error $(params)'
+      msg: 'Parameter Error ${params}'
     }
   }
 }

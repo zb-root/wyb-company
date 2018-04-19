@@ -12,6 +12,7 @@
     "padded-blocks": "off",
     "no-unused-vars": "off",
     "camelcase": "off",
-    "handle-callback-err": "off"
+    "handle-callback-err": "off",
+    "no-template-curly-in-string": "off"
   }
 }
