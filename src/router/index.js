@@ -17,6 +17,17 @@ export default function (opts = {}) {
     router
       .use(help(service))
       .use('/infos', company(service))
+      .add('/dict', 'get', function (opts, cb, next) {
+        let data = opts.data
+        let type = data.type
+        let ret = {}
+        if (type) {
+          ret[type] = service.dict[type] || []
+        } else {
+          ret = service.dict
+        }
+        cb(null, ret)
+      })
   })
 
   return router

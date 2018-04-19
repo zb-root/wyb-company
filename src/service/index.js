@@ -19,6 +19,7 @@ import storage from './model/storage'
 import track from './model/track'
 import truck from './model/truck'
 import etl from './etl'
+import dict from './dict'
 
 let ms = MS()
 let Err = _.defaults(error.Err, consts.Err)
@@ -102,6 +103,7 @@ export default function (opts = {}) {
     o.track = track(o, opts)
     o.truck = truck(o, opts)
 
+    o.dict = dict(o)
     etl(o)
 
     o.ready = true
