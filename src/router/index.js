@@ -42,17 +42,13 @@ export default function (opts = {}) {
        *
        * @apiParamExample {json} 请求参数例子:
        * {
-       *  page: 1,
-       *  rows: 10,
-       *  fields: {status:1}
+       *  type: 1,
+       *  year: '2018'
        * }
        *
        * @apiSuccessExample {json} 成功:
        * {
-       *  page:1,
-       *  pages:2,
-       *  total:10,
-       *  rows:[{}]
+       *  rows:[{"_id":{"date":"2018","province":"33"},"count":947}]
        * }
        */
       .add('/ranking', 'get', function (opts, cb, next) {

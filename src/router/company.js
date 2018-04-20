@@ -139,14 +139,16 @@ export default function (service, opts = {}) {
 
       if (types) {
         types = Array.isArray(types) ? types : types.toString().split(',')
-        conditions.$or || (conditions.$or = [])
-        conditions.$or.push({operationModes: {$in: types}})
+        // conditions.$or || (conditions.$or = [])
+        // conditions.$or.push({operationModes: {$in: types}})
+        conditions.operationModes = {$in: types}
       }
 
       if (products) {
         products = Array.isArray(products) ? products : products.toString().split(',')
-        conditions.$or || (conditions.$or = [])
-        conditions.$or.push({chemicals: {$in: products}})
+        // conditions.$or || (conditions.$or = [])
+        // conditions.$or.push({chemicals: {$in: products}})
+        conditions.chemicals = {$in: products}
       }
 
       if (fields) {
