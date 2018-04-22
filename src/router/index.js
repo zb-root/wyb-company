@@ -4,6 +4,7 @@ import moment from 'moment'
 import MS from 'jm-ms-core'
 import help from './help'
 import company from './company'
+import track from './track'
 
 let ms = new MS()
 
@@ -18,6 +19,7 @@ export default function (opts = {}) {
     router
       .use(help(service))
       .use('/infos', company(service))
+      .use('/tracks', track(service))
       .add('/dict', 'get', function (opts, cb, next) {
         let data = opts.data
         let type = data.type
@@ -112,6 +114,122 @@ export default function (opts = {}) {
             return cb(null, t(Err.FA_SYS, lng))
           }
           cb(null, {rows: result || []})
+        })
+      })
+      /**
+       * @api {get} /signSearch 标识搜索
+       * @apiVersion 0.0.1
+       * @apiGroup company
+       * @apiUse Error
+       *
+       * @apiParam {String} [search] 模糊查询标识.
+       * @apiParam {Number} [rows=20] 一页几行(可选,默认20).
+       *
+       * @apiParamExample {json} 请求参数例子:
+       * {
+       * }
+       *
+       * @apiSuccessExample {json} 成功:
+       * {
+       *  rows:["010444032017112100000012","010444032017112100000029"]
+       * }
+       */
+      .add('/signSearch', 'get', function (opts, cb, next) {
+        let data = opts.data
+        let lng = data.lng
+        let search = data.search || '0'
+        let rows = data.rows || 20
+        service.signMark.find2({
+          conditions: {_id: {$regex: '.*?' + search + '.*?'}},
+          fields: {_id: 1},
+          page: 1,
+          rows: rows
+        }, function (err, docs) {
+          if (err) {
+            console.log(err)
+            return cb(null, t(Err.FA_SYS, lng))
+          }
+          var ret = _.map(docs.rows, '_id')
+          cb(null, {rows: ret})
+        })
+      })
+      /**
+       * @api {get} /signInfo 获取标识信息
+       * @apiVersion 0.0.1
+       * @apiGroup company
+       * @apiUse Error
+       *
+       * @apiParam {String} [id] 标识id.
+       *
+       * @apiParamExample {json} 请求参数例子:
+       * {
+       * }
+       *
+       * @apiSuccessExample {json} 成功:
+       * {
+       * }
+       */
+      .add('/signInfo', 'get', function (opts, cb, next) {
+        let data = opts.data
+        let lng = data.lng
+        let id = data.id
+        let ret
+        async.waterfall([
+          function (cb) {
+            service.signMark.findById2(id, {
+              fields: {company: 1, chemicalCode: 1, chemicalName: 1, unit: 1, amount: 1},
+              lean: true
+            }, function (err, doc) {
+              if (err) {
+                console.log(err)
+                return cb(t(Err.FA_SYS, lng))
+              }
+              if (!doc) return cb()
+              ret = doc
+              ret.state = 0
+              cb()
+            })
+          },
+          function (cb) { // 查询生产信息
+            if (!ret) return cb()
+            service.track.findOne2({
+              conditions: {signMark: ret._id, type: 1},
+              fields: {_id: 0, company: 1, crtime: 1},
+              populations: {path: 'company', select: 'code name -_id'}
+            }, function (err, doc) {
+              if (err) {
+                console.log(err)
+                return cb(t(Err.FA_SYS, lng))
+              }
+              if (!doc) return cb()
+              ret.state = 1
+              ret.factoryInfo = doc
+              cb()
+            })
+          },
+          function (cb) { // 最后一次仓储信息
+            if (!ret) return cb()
+            service.track.findOne2({
+              conditions: {signMark: ret._id},
+              fields: {_id: 0, storage: 1, companyName: 1, unit: 1, amount: 1, type: 1},
+              populations: {path: 'storage', select: 'address -_id'},
+              options: {sort: {crtime: -1}}
+            }, function (err, doc) {
+              if (err) {
+                console.log(err)
+                return cb(t(Err.FA_SYS, lng))
+              }
+              if (!doc) return cb()
+              ret.state = doc.type
+              ret.storageInfo = doc
+              cb()
+            })
+          }
+        ], function (err, result) {
+          if (err) {
+            return cb(null, err)
+          }
+          cb(null, ret || {})
         })
       })
   })

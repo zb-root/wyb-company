@@ -110,7 +110,7 @@ export default function (service, opts = {}) {
               if (k === 'SFSJSY_PDBZ') data[key].push('使用')
             }
           } else if (key === 'company') {
-            data[key] = doc['FRHQTZZTYSHXYDM'] + '_' + doc['PROVICE']
+            data[key] = doc[k] + '_' + doc['PROVICE']
           } else {
             key && (data[key] = doc[k])
           }
@@ -180,7 +180,7 @@ export default function (service, opts = {}) {
         for (let k in doc) {
           let key = map[k]
           if (key === 'company') {
-            data[key] = doc['FRHQTZZTYSHXYDM'] + '_' + doc['SJGSDWDM'].slice(0, 2)
+            data[key] = doc[k] + '_' + doc['SJGSDWDM'].slice(0, 2)
           } else if (key === 'ZGZBF_RQ' || key === 'ZGZ_YXQJZRQ' || key === 'birthday') {
             if (!isNaN(Date.parse(doc[k]))) data[key] = doc[k]
           } else {
@@ -244,10 +244,8 @@ export default function (service, opts = {}) {
         let data = {}
         for (let k in doc) {
           let key = map[k]
-          if (key === '_id') {
-            data[key] = doc['YZBCCCSBM'] + '_' + doc['SJGSDWDM'].slice(0, 2)
-          } else if (key === 'company') {
-            data[key] = doc['FRHQTZZTYSHXYDM'] + '_' + doc['SJGSDWDM'].slice(0, 2)
+          if (key === '_id' || key === 'company') {
+            data[key] = doc[k] + '_' + doc['SJGSDWDM'].slice(0, 2)
           } else {
             key && (data[key] = doc[k])
           }
@@ -310,7 +308,7 @@ export default function (service, opts = {}) {
         for (let k in doc) {
           let key = map[k]
           if (key === 'storage') {
-            data[key] = doc['YZBCCCSBM'] + '_' + doc['SJGSDWDM'].slice(0, 2)
+            data[key] = doc[k] + '_' + doc['SJGSDWDM'].slice(0, 2)
           } else {
             key && (data[key] = doc[k])
           }
@@ -373,7 +371,7 @@ export default function (service, opts = {}) {
         for (let k in doc) {
           let key = map[k]
           if (key === 'company') {
-            data[key] = doc['FRHQTZZTYSHXYDM'] + '_' + doc['SJGSDWDM'].slice(0, 2)
+            data[key] = doc[k] + '_' + doc['SJGSDWDM'].slice(0, 2)
           } else if (key === 'drivingExpire' || key === 'licenseExpire') {
             if (!isNaN(Date.parse(doc[k]))) data[key] = doc[k]
           } else {
@@ -406,31 +404,411 @@ export default function (service, opts = {}) {
           }
         })
       })
+    },
+    signMarkImport: function (cb) {
+      logger.info('signMark sync data start')
+      let fileName = '050722'
+      let p = path.join(__dirname, '../../data/' + fileName + '.xlsx')
+      let workbook = xlsx.readFile(p) // 打开文件
+      let sheetNames = workbook.SheetNames // 获取标签页数组
+      let worksheet = workbook.Sheets[sheetNames[0]]
+      let rows = xlsx.utils.sheet_to_json(worksheet, {})
+      let map = mapping[fileName]
+      let syncTime = etl.syncTime[fileName] || 0
+
+      let progress = 0
+      let totle = rows.length
+      let tt
+
+      function printProgress () {
+        if (progress >= totle) return
+        tt = setTimeout(function () {
+          logger.info('signMark sync data progress (%s / %s  %s%)', progress, totle, Math.floor(progress / totle * 100))
+          printProgress()
+        }, 60 * 1000)
+      }
+
+      printProgress()
+
+      async.eachSeries(rows, function (doc, callback) {
+        progress++
+        let data = {}
+        for (let k in doc) {
+          let key = map[k]
+          if (key === 'company') {
+            data[key] = doc[k] + '_' + doc['SJGSDWDM'].slice(0, 2)
+          } else if (key === 'regtime') {
+            if (!isNaN(Date.parse(doc[k]))) data[key] = doc[k]
+          } else {
+            key && (data[key] = doc[k])
+          }
+        }
+        if (data.crtime) {
+          let updateTime = new Date(data.crtime)
+          if (updateTime.getTime() < syncTime) {
+            setTimeout(function () { callback() }, 10)
+            return
+          }
+        }
+        service.signMark.update({_id: data._id}, data, {upsert: true}, function (err, doc) {
+          err && console.log(err)
+          err && logger.warn('signMark未同步数据: ' + JSON.stringify(data))
+          callback()
+        })
+      }, function (err) {
+        tt && clearTimeout(tt)
+        logger.info('signMark data Import %s completion', rows.length)
+
+        cb && cb()
+        // 记录同步时间
+        service.signMark.findOne({}, {crtime: 1}, {sort: {crtime: -1}}, function (err, doc) {
+          if (doc && doc.crtime) {
+            let d = new Date(doc.crtime)
+            etl.syncTime[fileName] = d.getTime()
+            fse.writeJsonSync(path.join(__dirname, '../../config/sync.json'), etl.syncTime)
+          }
+        })
+      })
+    },
+    signAllotImport: function (cb) {
+      logger.info('signAllot sync data start')
+      let fileName = '050724'
+      let p = path.join(__dirname, '../../data/' + fileName + '.xlsx')
+      let workbook = xlsx.readFile(p) // 打开文件
+      let sheetNames = workbook.SheetNames // 获取标签页数组
+      let worksheet = workbook.Sheets[sheetNames[0]]
+      let rows = xlsx.utils.sheet_to_json(worksheet, {})
+      let map = mapping[fileName]
+      let syncTime = etl.syncTime[fileName] || 0
+
+      let progress = 0
+      let totle = rows.length
+      let tt
+
+      function printProgress () {
+        if (progress >= totle) return
+        tt = setTimeout(function () {
+          logger.info('signAllot sync data progress (%s / %s  %s%)', progress, totle, Math.floor(progress / totle * 100))
+          printProgress()
+        }, 60 * 1000)
+      }
+
+      printProgress()
+
+      async.eachSeries(rows, function (doc, callback) {
+        progress++
+        let data = {}
+        for (let k in doc) {
+          let key = map[k]
+          if (key === 'company') {
+            data[key] = doc[k] + '_' + doc['SJGSDWDM'].slice(0, 2)
+          } else if (key === 'regtime') {
+            if (!isNaN(Date.parse(doc[k]))) data[key] = doc[k]
+          } else {
+            key && (data[key] = doc[k])
+          }
+        }
+        if (data.crtime) {
+          let updateTime = new Date(data.crtime)
+          if (updateTime.getTime() < syncTime) {
+            setTimeout(function () { callback() }, 10)
+            return
+          }
+        }
+        service.signAllot.update({_id: data._id}, data, {upsert: true}, function (err, doc) {
+          err && console.log(err)
+          err && logger.warn('signAllot未同步数据: ' + JSON.stringify(data))
+          callback()
+        })
+      }, function (err) {
+        tt && clearTimeout(tt)
+        logger.info('signAllot data Import %s completion', rows.length)
+
+        cb && cb()
+        // 记录同步时间
+        service.signAllot.findOne({}, {crtime: 1}, {sort: {crtime: -1}}, function (err, doc) {
+          if (doc && doc.crtime) {
+            let d = new Date(doc.crtime)
+            etl.syncTime[fileName] = d.getTime()
+            fse.writeJsonSync(path.join(__dirname, '../../config/sync.json'), etl.syncTime)
+          }
+        })
+      })
+    },
+    trackWPImport: function (code, cb) {
+      logger.info('trackWP(%s) sync data start', code)
+      let fileName = code
+      let p = path.join(__dirname, '../../data/' + fileName + '.xlsx')
+      let workbook = xlsx.readFile(p) // 打开文件
+      let sheetNames = workbook.SheetNames // 获取标签页数组
+      let worksheet = workbook.Sheets[sheetNames[0]]
+      let rows = xlsx.utils.sheet_to_json(worksheet, {})
+      let map = mapping[fileName]
+      let syncTime = etl.syncTime[fileName] || 0
+
+      let progress = 0
+      let totle = rows.length
+      let tt
+
+      function printProgress () {
+        if (progress >= totle) return
+        tt = setTimeout(function () {
+          logger.info('trackWP(%s) sync data progress (%s / %s  %s%)', code, progress, totle, Math.floor(progress / totle * 100))
+          printProgress()
+        }, 60 * 1000)
+      }
+
+      printProgress()
+
+      let m = {'050709': 2, '050711': 3, '050713': 1, '050715': 4, '050717': 5, '050719': 6, '050721': 7}
+      async.eachSeries(rows, function (doc, callback) {
+        progress++
+        let data = {}
+        for (let k in doc) {
+          let key = map[k]
+          key && (data[key] = doc[k])
+        }
+        data.type = m[code]
+        if (data.regtime) {
+          let updateTime = new Date(data.regtime)
+          if (updateTime.getTime() < syncTime) {
+            setTimeout(function () { callback() }, 10)
+            return
+          }
+        }
+        service.track.update({_id: data._id}, data, {upsert: true}, function (err, doc) {
+          err && console.log(err)
+          err && logger.warn('trackWP未同步数据: ' + JSON.stringify(data))
+          callback()
+        })
+      }, function (err) {
+        tt && clearTimeout(tt)
+        logger.info('trackWP(%s) data Import %s completion', code, rows.length)
+
+        cb && cb()
+        // 记录同步时间
+        service.track.findOne({}, {regtime: 1}, {sort: {regtime: -1}}, function (err, doc) {
+          if (doc && doc.regtime) {
+            let d = new Date(doc.regtime)
+            etl.syncTime[fileName] = d.getTime()
+            fse.writeJsonSync(path.join(__dirname, '../../config/sync.json'), etl.syncTime)
+          }
+        })
+      })
+    },
+    trackInfoImport: function (code, cb) {
+      logger.info('trackInfo(%s) sync data start', code)
+      let fileName = code
+      let p = path.join(__dirname, '../../data/' + fileName + '.xlsx')
+      let workbook = xlsx.readFile(p) // 打开文件
+      let sheetNames = workbook.SheetNames // 获取标签页数组
+      let worksheet = workbook.Sheets[sheetNames[0]]
+      let rows = xlsx.utils.sheet_to_json(worksheet, {})
+      let map = mapping[fileName]
+      let syncTime = etl.syncTime[fileName] || 0
+
+      let progress = 0
+      let totle = rows.length
+      let tt
+
+      function printProgress () {
+        if (progress >= totle) return
+        tt = setTimeout(function () {
+          logger.info('trackInfo(%s) sync data progress (%s / %s  %s%)', code, progress, totle, Math.floor(progress / totle * 100))
+          printProgress()
+        }, 60 * 1000)
+      }
+
+      printProgress()
+
+      async.eachSeries(rows, function (doc, callback) {
+        progress++
+        let data = {}
+        for (let k in doc) {
+          let key = map[k]
+          if (key === 'company' || key === 'storage') {
+            data[key] = doc[k] + '_' + doc['SJGSDWDM'].slice(0, 2)
+          } else if (key === 'regtime') {
+            if (!isNaN(Date.parse(doc[k]))) data[key] = doc[k]
+          } else {
+            if (key) {
+              let keys = key.split('.') || []
+              if (keys[0] === 'ext') {
+                data[keys[0]] || (data[keys[0]] = {})
+                let obj = data[keys[0]]
+                if (keys[1] === 'company' || keys[1] === 'storage') {
+                  obj[keys[1]] = doc[k] + '_' + doc['SJGSDWDM'].slice(0, 2)
+                } else {
+                  obj[keys[1]] = doc[k]
+                }
+              } else {
+                data[key] = doc[k]
+              }
+            }
+          }
+        }
+        if (data.regtime) {
+          let updateTime = new Date(data.regtime)
+          if (updateTime.getTime() < syncTime) {
+            setTimeout(function () { callback() }, 10)
+            return
+          }
+        }
+        service.track.update({code: data.code}, data, {multi: true}, function (err, doc) {
+          err && console.log(err)
+          err && logger.warn('trackInfo未同步数据: ' + JSON.stringify(data))
+          callback()
+        })
+      }, function (err) {
+        tt && clearTimeout(tt)
+        logger.info('trackInfo(%s) data Import %s completion', code, rows.length)
+
+        cb && cb()
+        // 记录同步时间
+        service.track.findOne({}, {regtime: 1}, {sort: {regtime: -1}}, function (err, doc) {
+          if (doc && doc.regtime) {
+            let d = new Date(doc.regtime)
+            etl.syncTime[fileName] = d.getTime()
+            fse.writeJsonSync(path.join(__dirname, '../../config/sync.json'), etl.syncTime)
+          }
+        })
+      })
+    },
+    trackFlowImport: function (cb) {
+      logger.info('trackFlow sync data start')
+      let fileName = '050723'
+      let p = path.join(__dirname, '../../data/' + fileName + '.xlsx')
+      let workbook = xlsx.readFile(p) // 打开文件
+      let sheetNames = workbook.SheetNames // 获取标签页数组
+      let worksheet = workbook.Sheets[sheetNames[0]]
+      let rows = xlsx.utils.sheet_to_json(worksheet, {})
+      let map = mapping[fileName]
+      let syncTime = etl.syncTime[fileName] || 0
+
+      let progress = 0
+      let totle = rows.length
+      let tt
+
+      function printProgress () {
+        if (progress >= totle) return
+        tt = setTimeout(function () {
+          logger.info('trackFlow sync data progress (%s / %s  %s%)', progress, totle, Math.floor(progress / totle * 100))
+          printProgress()
+        }, 60 * 1000)
+      }
+
+      printProgress()
+
+      async.eachSeries(rows, function (doc, callback) {
+        progress++
+        let data = {}
+        for (let k in doc) {
+          let key = map[k]
+          key && (data[key] = doc[k])
+        }
+        data.code = data.code.split('_')[0]
+        if (doc['DJSJ']) {
+          let updateTime = new Date(doc['DJSJ'])
+          if (updateTime.getTime() < syncTime) {
+            setTimeout(function () { callback() }, 10)
+            return
+          }
+        }
+        service.track.update({code: data.code}, data, {multi: true}, function (err, doc) {
+          err && console.log(err)
+          err && logger.warn('trackFlow未同步数据: ' + JSON.stringify(data))
+          callback()
+        })
+      }, function (err) {
+        tt && clearTimeout(tt)
+        logger.info('trackFlow data Import %s completion', rows.length)
+
+        cb && cb()
+        // 记录同步时间
+        service.track.findOne({}, {regtime: 1}, {sort: {regtime: -1}}, function (err, doc) {
+          if (doc && doc.regtime) {
+            let d = new Date(doc.regtime)
+            etl.syncTime[fileName] = d.getTime()
+            fse.writeJsonSync(path.join(__dirname, '../../config/sync.json'), etl.syncTime)
+          }
+        })
+      })
     }
   }
 
-  // async.waterfall([
-  //   function (cb) {
-  //     etl.companyImport(cb)
-  //   },
-  //   function (cb) {
-  //     etl.chemicalImport(cb)
-  //   },
-  //   function (cb) {
-  //     etl.employeeImport(cb)
-  //   },
-  //   function (cb) {
-  //     etl.storageImport(cb)
-  //   },
-  //   function (cb) {
-  //     etl.goodsImport(cb)
-  //   },
-  //   function (cb) {
-  //     etl.truckImport(cb)
-  //   }
-  // ], function () {
-  //   logger.info('All data sync completion')
-  // })
+  async.waterfall([
+    // function (cb) {
+    //   etl.companyImport(function () {cb()})
+    // },
+    // function (cb) {
+    //   etl.chemicalImport(function () {cb()})
+    // },
+    // function (cb) {
+    //   etl.employeeImport(function () {cb()})
+    // },
+    // function (cb) {
+    //   etl.storageImport(function () {cb()})
+    // },
+    // function (cb) {
+    //   etl.goodsImport(function () {cb()})
+    // },
+    // function (cb) {
+    //   etl.truckImport(function () {cb()})
+    // },
+    // function (cb) {
+    //   etl.signMarkImport(function () {cb()})
+    // },
+    // function (cb) {
+    //   etl.signAllotImport(function () {cb()})
+    // },
+    // function (cb) {
+    //   etl.trackWPImport('050709', function () {cb()})
+    // },
+    // function (cb) {
+    //   etl.trackWPImport('050711', function () {cb()})
+    // },
+    // function (cb) {
+    //   etl.trackWPImport('050713', function () {cb()})
+    // },
+    // function (cb) {
+    //   etl.trackWPImport('050715', function () {cb()})
+    // },
+    // function (cb) {
+    //   etl.trackWPImport('050717', function () {cb()})
+    // },
+    // function (cb) {
+    //   etl.trackWPImport('050719', function () {cb()})
+    // },
+    // function (cb) {
+    //   etl.trackWPImport('050721', function () {cb()})
+    // },
+    // function (cb) {
+    //   etl.trackInfoImport('050708', function () {cb()})
+    // },
+    // function (cb) {
+    //   etl.trackInfoImport('050710', function () {cb()})
+    // },
+    // function (cb) {
+    //   etl.trackInfoImport('050712', function () {cb()})
+    // },
+    // function (cb) {
+    //   etl.trackInfoImport('050714', function () {cb()})
+    // },
+    // function (cb) {
+    //   etl.trackInfoImport('050716', function () {cb()})
+    // },
+    // function (cb) {
+    //   etl.trackInfoImport('050718', function () {cb()})
+    // },
+    // function (cb) {
+    //   etl.trackInfoImport('050720', function () {cb()})
+    // },
+    // function (cb) {
+    //   etl.trackFlowImport(function () {cb()})
+    // }
+  ], function () {
+    logger.info('All data sync completion')
+  })
 
   // etl.companyImport()
   // etl.chemicalImport()
@@ -438,6 +816,23 @@ export default function (service, opts = {}) {
   // etl.storageImport()
   // etl.goodsImport()
   // etl.truckImport()
+  // etl.signMarkImport()
+  // etl.signAllotImport()
+  // etl.trackWPImport('050709')
+  // etl.trackWPImport('050711')
+  // etl.trackWPImport('050713')
+  // etl.trackWPImport('050715')
+  // etl.trackWPImport('050717')
+  // etl.trackWPImport('050719')
+  // etl.trackWPImport('050721')
+  // etl.trackInfoImport('050708')
+  // etl.trackInfoImport('050710')
+  // etl.trackInfoImport('050712')
+  // etl.trackInfoImport('050714')
+  // etl.trackInfoImport('050716')
+  // etl.trackInfoImport('050718')
+  // etl.trackInfoImport('050720')
+  // etl.trackFlowImport()
 
   return etl
 }

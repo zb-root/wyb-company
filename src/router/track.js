@@ -16,25 +16,22 @@ export default function (service, opts = {}) {
   let defList = {
     conditions: {},
     options: {
-      sort: [{'crtime': -1}]
+      sort: [{'crtime': 1}]
     },
-    fields: {name: 1, address: 1, crtime: 1, operationModes: 1, chemicals: 1, authState: 1, province: 1, city: 1},
-    populations: null
+    fields: {signMark: 1, company: 1, storage: 1, type: 1, regtime: 1, unit: 1, amount: 1, crtime: 1},
+    populations: [{path: 'company', select: 'code name -_id'}]
   }
   let defGet = {
     conditions: {},
     fields: {
-      name: 1,
-      address: 1,
-      telephone: 1,
-      crtime: 1,
-      moditime: 1,
-      operationModes: 1,
-      chemicals: 1,
-      authState: 1,
-      province: 1,
-      city: 1,
-      isCancel: 1
+      signMark: 1,
+      company: 1,
+      storage: 1,
+      type: 1,
+      regtime: 1,
+      unit: 1,
+      amount: 1,
+      crtime: 1
     },
     populations: null // 没有的话一定要是不传或者null,如果是{}则查不到数据
   }
@@ -42,7 +39,7 @@ export default function (service, opts = {}) {
   let listOpts = opts.list || defList
   let getOpts = opts.get || defGet
 
-  let self = service.company
+  let self = service.track
   let router = ms.router()
   service.onReady().then(() => {
     router
@@ -53,7 +50,7 @@ export default function (service, opts = {}) {
     let routes = self.routes
 
     /**
-     * @api {get} /infos 获取企业列表
+     * @api {get} /tracks 获取追踪记录列表
      * @apiVersion 0.0.1
      * @apiGroup company
      * @apiUse Error
@@ -62,9 +59,8 @@ export default function (service, opts = {}) {
      * @apiParam {Number} [rows=20] 一页几行(可选,默认20).
      * @apiParam {Object} [fields] 筛选字段(可选)
      * @apiParam {Object} [sort] 对查询数据排序(可选).
-     * @apiParam {String} [search] 模糊查询(可选).
+     * @apiParam {String} [signCode] 标识编码(可选).
      * @apiParam {String} [types] 经营方式查询(可选).
-     * @apiParam {String} [products] 产品查询(可选).
      * @apiParam {String} [province] 省(可选).
      * @apiParam {String} [city] 市(可选).
      * @apiParam {String} [startDate] 开始时间(可选).
@@ -97,9 +93,8 @@ export default function (service, opts = {}) {
       let endDate = data.endDate
       let fields = data.fields
       let sort = data.sort
-      let search = data.search
+      let signCode = data.signCode
       let types = data.types
-      let products = data.products
       let province = data.province
       let city = data.city
 
@@ -129,26 +124,13 @@ export default function (service, opts = {}) {
         conditions.companyCode = {$regex: '^' + code + '.*?'}
       }
 
-      if (search) {
-        let ary = []
-        let pattern = '.*?' + search + '.*?'
-        ary.push({'name': {$regex: pattern}})
-        ary.push({'address': {$regex: pattern}})
-        conditions.$or = ary
+      if (signCode) {
+        conditions.signMark = signCode
       }
 
       if (types) {
         types = Array.isArray(types) ? types : types.toString().split(',')
-        // conditions.$or || (conditions.$or = [])
-        // conditions.$or.push({operationModes: {$in: types}})
-        conditions.operationModes = {$in: types}
-      }
-
-      if (products) {
-        products = Array.isArray(products) ? products : products.toString().split(',')
-        // conditions.$or || (conditions.$or = [])
-        // conditions.$or.push({chemicals: {$in: products}})
-        conditions.chemicals = {$in: products}
+        conditions.type = {$in: types}
       }
 
       if (fields) {
@@ -175,7 +157,7 @@ export default function (service, opts = {}) {
     }
 
     /**
-     * @api {get} /infos/:id 获取某一企业信息
+     * @api {get} /tracks/:id 获取某条追踪记录
      * @apiVersion 0.0.1
      * @apiGroup company
      * @apiUse Error
