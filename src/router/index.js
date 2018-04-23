@@ -117,6 +117,77 @@ export default function (opts = {}) {
         })
       })
       /**
+       * @api {get} /activeRanking 活跃排行
+       * @apiVersion 0.0.1
+       * @apiGroup company
+       * @apiUse Error
+       *
+       * @apiParam {String} [startDate] 开始时间(可选).
+       *
+       * @apiParamExample {json} 请求参数例子:
+       * {
+       * }
+       *
+       * @apiSuccessExample {json} 成功:
+       * {
+       *  rows:[]
+       * }
+       */
+      .add('/activeRanking', 'get', function (opts, cb, next) {
+        let data = opts.data
+        let lng = data.lng
+        let startDate = data.startDate
+        let utcOffset = data.utcOffset || service.config.utcOffset
+        let UTC = Number(utcOffset || 0)
+        let mstartDate = moment()
+        let mendDate = moment()
+        if (startDate) {
+          if (isNaN(Date.parse(startDate))) {
+            return cb(null, t(Err.FA_PARAMS_FAIL, lng, {params: 'startDate'}))
+          }
+          mstartDate = moment(new Date(startDate))
+          mendDate = moment(new Date(startDate))
+        }
+        startDate = mstartDate.subtract(1, 'months').startOf('months')
+        let endDate = mendDate.endOf('months')
+
+        let curDateStr = endDate.format('YYYY-MM')
+
+        let conditions = {crtime: {$gte: startDate.toDate(), $lte: endDate.toDate()}}
+        let q = service.goods.aggregate()
+        q.match(conditions)
+        q.project({
+          date: {$dateToString: {format: '%Y-%m', date: {'$add': ['$crtime', -UTC * 60 * 1000]}}},
+          province: {$substr: ['$companyCode', 0, 2]}
+        })
+        q.group({
+          _id: {date: '$date', province: '$province'},
+          count: {$sum: 1}
+        })
+        q.group({
+          _id: {date: '$_id.date', province: '$_id.province'},
+          province: {$first: '$_id.province'},
+          year: {$first: {$substr: ['$_id.date', 0, 4]}},
+          curCount: {$first: {$cond: [{$eq: ['$_id.date', curDateStr]}, '$count', 0]}},
+          preCount: {$first: {$cond: [{$ne: ['$_id.date', curDateStr]}, '$count', 0]}}
+        })
+        q.group({
+          _id: {province: '$province'},
+          province: {$first: '$province'},
+          year: {$first: '$year'},
+          curCount: {$sum: '$curCount'},
+          preCount: {$sum: '$preCount'}
+        })
+        q.sort({curCount: -1})
+        q.exec(function (err, result) {
+          if (err) {
+            console.log(err)
+            return cb(null, t(Err.FA_SYS, lng))
+          }
+          cb(null, {rows: result || []})
+        })
+      })
+      /**
        * @api {get} /signSearch 标识搜索
        * @apiVersion 0.0.1
        * @apiGroup company
